@@ -1,0 +1,71 @@
+*filter
+# define chains
+:INPUT_IPTABLES_HELPER - [0:0]
+:FORWARD_IPTABLES_HELPER - [0:0]
+:OUTPUT_IPTABLES_HELPER - [0:0]
+
+# bryce allowed access to mumble:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -p udp --dport 64738 -j ACCEPT
+
+# bryce allowed access to mumble:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -p tcp --dport 64738 -j ACCEPT
+
+# bryce blocked by default on INPUT:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -j DROP
+
+# bryce blocked by default on OUTPUT:
+-A OUTPUT_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -j DROP
+
+# bryce blocked by default on FORWARD:
+-A FORWARD_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -j DROP
+
+# christopher allowed access to mumble:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.5 -i wg0 -p udp --dport 64738 -j ACCEPT
+
+# christopher allowed access to mumble:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.5 -i wg0 -p tcp --dport 64738 -j ACCEPT
+
+# christopher blocked by default on INPUT:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.5 -i wg0 -j DROP
+
+# christopher blocked by default on OUTPUT:
+-A OUTPUT_IPTABLES_HELPER -s 10.153.150.5 -i wg0 -j DROP
+
+# christopher blocked by default on FORWARD:
+-A FORWARD_IPTABLES_HELPER -s 10.153.150.5 -i wg0 -j DROP
+
+# muhammad allowed access to mumble:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.6 -i wg0 -p udp --dport 64738 -j ACCEPT
+
+# muhammad allowed access to mumble:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.6 -i wg0 -p tcp --dport 64738 -j ACCEPT
+
+# muhammad blocked by default on INPUT:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.6 -i wg0 -j DROP
+
+# muhammad blocked by default on OUTPUT:
+-A OUTPUT_IPTABLES_HELPER -s 10.153.150.6 -i wg0 -j DROP
+
+# muhammad blocked by default on FORWARD:
+-A FORWARD_IPTABLES_HELPER -s 10.153.150.6 -i wg0 -j DROP
+
+# iulian allowed access to mumble:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.7 -i wg0 -p udp --dport 64738 -j ACCEPT
+
+# iulian allowed access to mumble:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.7 -i wg0 -p tcp --dport 64738 -j ACCEPT
+
+# iulian blocked by default on INPUT:
+-A INPUT_IPTABLES_HELPER -s 10.153.150.7 -i wg0 -j DROP
+
+# iulian blocked by default on OUTPUT:
+-A OUTPUT_IPTABLES_HELPER -s 10.153.150.7 -i wg0 -j DROP
+
+# iulian blocked by default on FORWARD:
+-A FORWARD_IPTABLES_HELPER -s 10.153.150.7 -i wg0 -j DROP
+
+
+COMMIT
+# apply with:
+# sudo iptables-restore --noflush < thisfile.v4
+

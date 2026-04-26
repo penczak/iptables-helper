@@ -1,0 +1,8 @@
+
+sudo iptables -N INPUT_IPTABLES_HELPER
+sudo iptables -N FORWARD_IPTABLES_HELPER
+sudo iptables -N OUTPUT_IPTABLES_HELPER
+
+sudo iptables -A INPUT -j INPUT_IPTABLES_HELPER
+sudo iptables -A FORWARD -j FORWARD_IPTABLES_HELPER
+sudo iptables -A OUTPUT -j OUTPUT_IPTABLES_HELPER
