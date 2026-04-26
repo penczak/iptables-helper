@@ -1,3 +1,4 @@
+#!/bin/bash
 
 sudo iptables -N INPUT_IPTABLES_HELPER
 sudo iptables -N FORWARD_IPTABLES_HELPER
