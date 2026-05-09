@@ -1,0 +1,40 @@
+clients:
+  bryce:
+    ip: 10.153.150.4
+  christopher:
+    ip: 10.153.150.5
+  muhammad:
+    ip: 10.153.150.6
+  iulian:
+    ip: 10.153.150.7
+
+services:
+  mumble:
+    match:
+      - protocol: udp
+        port: 64738
+      - protocol: tcp
+        port: 64738
+
+policies:
+  - client: bryce
+    chain: INPUT
+    in_interface: wg0
+    allow:
+      - mumble
+  - client: christopher
+    chain: INPUT
+    in_interface: wg0
+    allow:
+      - mumble
+  - client: muhammad
+    chain: INPUT
+    in_interface: wg0
+    allow:
+      - mumble
+  - client: iulian
+    chain: INPUT
+    in_interface: wg0
+    allow:
+      - mumble
+
