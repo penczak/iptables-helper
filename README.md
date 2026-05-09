@@ -1,47 +1,205 @@
 
-diff after setup.sh
-https://diffviewer.vercel.app/v2/diff#H4sIAAAAAAAAA-1XXWuDMBT9K8GnDdrS0q_RN6vZKpMq0bKXQnGaVUFUNGUrY_99Wmu3VleNTWFjCkJpOCf33Jt7c3znXDviJpxgG44HpLm60MFN4LuOuQW8IEBVv12GS48Y4RoTkDxB6BPgBwRE_iY0MTh-LBwRxzOI43sJLqXYrRiuC0C7Hf_wtq82Do-RhX-aJCIGwQBBmdeh2IKazk9lSZtB8YScmEFK3ut2esN-_HY7g_PkCcQKyGQ0GPfvTug2FjVdAjmiE5GiZoBM-lm6CpKGbCWV0NFKytNVkDRiK6mEjlZSnq6CpDFbSSV0tJLydAkoedMZcK-gJx6JLKeAqAiPELUXGkRV58A3WBYQDbJO79U63bXOz4UVUhY64zH9xZ3mHNz0QIhf4p09E0eX1b5Aa2n9TuNpT5EkPkCWYaU6LwxL0BmGdNW7Mhf6oc0ZpzTJCX2PS3Mdojkv14DujwYFkDrRhQk8hMwug7k9dhOTDT_X4sLG6TVOr3F6_9zp7Tp_JalJg0FtNYOySmfLGqv4263iPg1siszebaaMbKJr_GrjVxu_WqX2f8yvFt40uZlxjb2KL8hr7PTDIGRm-F07ko1n7MauXwmddbzgAh2_kfRbIFuKY_HW2EpXPj4BLKaIDREWAAA
+### iptables-helper
 
-diff after iptables-restore --noflush < output.v4
-https://diffviewer.vercel.app/v2/diff#H4sIAAAAAAAAA-2Z72uCQBjH_5XDVxvUKGo1euf0tskkRY29CYazWwmiohdbjP3v87KCsh-ePo4xThCi4_ne8328e-6TfUnBIpVGkrJw_RBpY3PioKs4CnxvhWRFwaZzPU2mIXWTOaGIXXESURTFFKXRMvEI2r9mJKV-6FI_CllcLrEecYMAoXY7-xCuPhYk2Y88-qVHU-pSgiysyw5WW9h25Htds5-weiBOvTgX73Zuure97O7c9M-Ls5BZTEeD_rB3dyC3nHHLsZA9OdUyzG3A1vpZuRKWbmEtXZDjtVSUK2FpAGvpghyvpaJcCUtDWEsX5HgtFeVY0Hrnv2om22DYfn3CuomtspuWCbA7byIPhvUiWypkG1EN5Rlb7YnNl9MmbJsQT2SVzVtpe1RagJUe8aYMMA_ZmDjAR0WuCJNd_uDRVRcl5D0bDT2S1luARwrOnU_73tLURwyZVu6zZlqKA5hSoyd-IfVdrwEuKasJf6PRxg62xrJeIXSzNDgCuQt9tIC7lOEqWJhj3bab0D_V0ZqY6_gB2cRMJxohzFRSS0oE8AvgF8AvgF8AvwB-AfwnFqAA_r9w4gvgF8D_q8D_H8-B3_sRA0zUwLxfF9AhiBqY9-sCOgRRA_N-XUCHIGpg3q-5axt9IfAfm57UYv9q6u4bCaSRZCT-PDMbIId80vz9x3Yoq284J7N85PsHI3j-0QwdAAA
+Generate deterministic `iptables-restore` rules from a simple(ish) YAML definition of clients, services, and policies.
 
-need to run per chain before applying to reset chain:
+---
+
+## Overview
+
+This project converts a structured YAML file (`iptables.yaml`) into a ready-to-apply `iptables-restore` configuration. It is designed to:
+
+* Centralize firewall intent in a readable format
+* Avoid manual rule management
+* Ensure consistent rule generation
+* Enforce default-deny behavior per client
+* Create an easy-to-update way to manage existing rules (just update a "service" definition and re-run, rather than deleting and updating all rules related to a service)
+
+The script uses custom iptables chains (`INPUT_IPTABLES_HELPER`, `OUTPUT_IPTABLES_HELPER`, `FORWARD_IPTABLES_HELPER`) to allow for easy flushing of all rules created by this script, without disrupting existing rules and chains.
+
+The output is applied using `iptables-restore --noflush`, allowing coexistence with existing rules.
+
+---
+
+## Files
+
+* `iptables-helper.sh`
+  Parses YAML and generates `iptables-restore`-compatible output.
+
+* `setup.sh`
+  Creates helper chains and attaches them to the main chains.
+
+* `iptables.yaml`
+  User-defined configuration (clients, services, policies).
+
+---
+
+## Requirements
+
+* `bash`
+* `yq` (v4+)
+* `iptables`
+
+---
+
+## Configuration
+
+### Example: `iptables.yaml`
+
+```yaml
+clients:
+  bryce:
+    ip: 10.153.150.4
+
+services:
+  mumble:
+    match:
+      - protocol: udp
+        port: 64738
+      - protocol: tcp
+        port: 64738
+
+policies:
+  - client: bryce
+    chain: INPUT
+    in_interface: wg0
+    allow:
+      - mumble
+```
+
+Example output from above:
+
+```text
+*filter
+:INPUT_IPTABLES_HELPER - [0:0]
+
+-A INPUT_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -p udp --dport 64738 -j ACCEPT
+-A INPUT_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -j DROP
+
+COMMIT
+```
+
+
+### Structure
+
+#### `clients`
+
+* Key: client name
+* Value:
+
+  * `ip`: IP address or CIDR
+
+#### `services`
+
+* Key: service name
+* Value:
+
+  * `match`: list of protocol/port combinations
+
+#### `policies`
+
+* `client`: references a client
+* `chain`: `INPUT`, `OUTPUT`, or `FORWARD`
+* `in_interface` (optional)
+* `out_interface` (optional)
+* `allow`: list of service names
+
+---
+
+## Behavior
+
+For each client:
+
+1. Generate `ACCEPT` rules for explicitly allowed services
+2. Append a `DROP` rule per chain (INPUT, OUTPUT, FORWARD)
+
+Rules are isolated in custom chains:
+
+* `INPUT_IPTABLES_HELPER`
+* `OUTPUT_IPTABLES_HELPER`
+* `FORWARD_IPTABLES_HELPER`
+
+These chains are created and attached to the main chains via `setup.sh`.
+
+---
+
+## Usage
+
+### 1. Initialize chains
+
+```bash
+sudo ./setup.sh
+```
+
+### 2. Generate rules
+
+```bash
+./iptables-helper.sh > output.v4
+```
+
+### 3. Apply rules
+
+```bash
+# flush chains manually and use --noflush to preserve main chains
+# and any chains not managed by this tool
 sudo iptables -F INPUT_IPTABLES_HELPER
-sudo iptables -F FORWARD_IPTABLES_HELPER
-sudo iptables -F OUTPUT_IPTABLES_HELPER
+sudo iptables -F INPUT_IPTABLES_HELPER
+sudo iptables -F INPUT_IPTABLES_HELPER
+sudo iptables-restore --noflush < output.v4
+```
 
+---
 
-### example output
+## Example Output
+
+```text
 *filter
-# define (or redefine) only your chains
-:INPUT_CLIENT_FRIEND1 - [0:0]
-:FORWARD_CLIENT_FRIEND1 - [0:0]
+:INPUT_IPTABLES_HELPER - [0:0]
 
-# ensure jump hooks exist (make sure not to duplicate? it currently will duplicate)
--A {chaintype} -s {clientipmask} -j {chaintype}_CLIENT_{clientname}
--A FORWARD -s 10.153.150.4/32 -j FORWARD_CLIENT_FRIEND1
-
-# your generated rules live only here
--A INPUT_CLIENT_BRYCE -p tcp --dport 64738 -j ACCEPT
+-A INPUT_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -p udp --dport 64738 -j ACCEPT
+-A INPUT_IPTABLES_HELPER -s 10.153.150.4 -i wg0 -j DROP
 
 COMMIT
-# apply:
-# MAKE SURE TO INCLUDE --noflush
-# sudo iptables-restore --noflush < rules.v4
+```
 
-*filter
-# define (or redefine) only your chains
-:INPUT_CLIENT_FRIEND1 - [0:0]
-:FORWARD_CLIENT_FRIEND1 - [0:0]
+---
 
-# ensure jump hooks exist (make sure not to duplicate? it currently will duplicate)
--A {chaintype} -s {clientipmask} -j {chaintype}_CLIENT_{clientname}
--A FORWARD -s 10.153.150.4/32 -j FORWARD_CLIENT_FRIEND1
+## Notes
 
-# your generated rules live only here
--A INPUT_CLIENT_BRYCE -p tcp --dport 64738 -j ACCEPT
+* Rule order is significant: allow rules are inserted before deny rules.
+* Default behavior is **deny all unspecified traffic per client**.
+* `--noflush` ensures existing unrelated rules are preserved.
+* Missing or `null` values in YAML will cause the script to exit with an error.
 
-COMMIT
-# apply:
-# MAKE SURE TO INCLUDE --noflush
-# sudo iptables-restore --noflush < rules.v4
+---
+
+## Limitations
+
+* No support for:
+
+  * Source ports
+  * Destination IP filtering
+  * Stateful matching beyond basic `iptables` defaults
+* Assumes IPv4 (`iptables`, not `ip6tables`)
+* Does not deduplicate rules
+
+---
+
+## Future Improvements
+
+* IPv6 support
+* Rule deduplication
+* Validation schema for YAML
+* Optional logging rules
+* Service grouping / tagging
+
+---
+
+## Safety
+
+Always validate generated rules before applying:
+
+```bash
+iptables-restore --test < output.v4
+```
+
