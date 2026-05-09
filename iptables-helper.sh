@@ -54,9 +54,9 @@ while IFS= read -r client; do
 
   # end with default DROP
 
-  rules[rules_index++]="INPUT"$'\t'"$ip"$'\t'"$in_interface"$'\t'"$out_interface"$'\t'"null"$'\t'"null"$'\t'"DROP"$'\t'"${client} blocked by default on INPUT:"
-  rules[rules_index++]="OUTPUT"$'\t'"$ip"$'\t'"$in_interface"$'\t'"$out_interface"$'\t'"null"$'\t'"null"$'\t'"DROP"$'\t'"${client} blocked by default on OUTPUT:"
-  rules[rules_index++]="FORWARD"$'\t'"$ip"$'\t'"$in_interface"$'\t'"$out_interface"$'\t'"null"$'\t'"null"$'\t'"DROP"$'\t'"${client} blocked by default on FORWARD:"
+  rules[rules_index++]="INPUT"$'\t'"$ip"$'\t'"null"$'\t'"null"$'\t'"null"$'\t'"null"$'\t'"DROP"$'\t'"${client} blocked by default on INPUT:"
+  rules[rules_index++]="OUTPUT"$'\t'"$ip"$'\t'"null"$'\t'"null"$'\t'"null"$'\t'"null"$'\t'"DROP"$'\t'"${client} blocked by default on OUTPUT:"
+  rules[rules_index++]="FORWARD"$'\t'"$ip"$'\t'"null"$'\t'"null"$'\t'"null"$'\t'"null"$'\t'"DROP"$'\t'"${client} blocked by default on FORWARD:"
 
 done < <(yq -r '.clients | keys[]' "$input_file")
 
