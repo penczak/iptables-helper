@@ -19,6 +19,8 @@ The script uses custom iptables chains (`INPUT_IPTABLES_HELPER`, `OUTPUT_IPTABLE
 
 The output is applied using `iptables-restore --noflush`, allowing coexistence with existing rules.
 
+Only tested on Debian.
+
 ---
 
 ## Files
